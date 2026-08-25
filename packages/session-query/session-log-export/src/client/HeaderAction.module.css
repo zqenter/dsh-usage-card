@@ -1,0 +1,41 @@
+.sessionLogButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* Keep a comfortable hit area even without the capsule decoration. */
+  min-width: 88px;
+  height: 28px;
+  padding: 0 6px;
+  gap: 4px;
+  border: none;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
+  font-family: var(--dsw-font-family);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 20px;
+  cursor: pointer;
+  position: relative;
+  z-index: 1;
+  /* In the frameless desktop shell the header row sits inside the window
+     drag strip; exclude the button from dragging so clicks reach it. */
+  -webkit-app-region: no-drag;
+}
+
+.sessionLogButton:hover:not(:disabled) {
+  color: var(--dsw-alias-label-primary);
+}
+
+.sessionLogButton:disabled {
+  color: var(--dsw-alias-label-dimmed);
+  cursor: wait;
+}
+
+.sessionLogButton span,
+.sessionLogButton svg {
+  flex: none;
+}
+
+.sessionLogButton span {
+  white-space: nowrap;
+}

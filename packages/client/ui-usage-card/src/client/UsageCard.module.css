@@ -1,0 +1,1370 @@
+/* Usage card: full card above Settings when wide, compact period pill on the
+   rail. Visual hierarchy — level 1: balance + today cost (large metrics);
+   level 2: today's tokens; level 3: badge/estimate/updated + chart legend.
+   Tokens use the sidebar's design aliases so the card follows both themes. */
+
+.card {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  padding: 10px 12px 9px;
+  margin: 4px 0 2px;
+  box-sizing: border-box;
+  border: 1px solid var(--dsw-alias-border-l2-darkmode-thin, var(--dsw-alias-border-l2));
+  border-radius: 14px;
+  /* Same surface as the composer input box. */
+  background: var(--dsw-specific-input-major);
+  box-shadow: var(--dsw-shadow-lv2);
+  color: var(--dsw-alias-label-primary);
+  font-size: 12px;
+  line-height: 16px;
+  text-align: left;
+  /* The whole card toggles expanded/collapsed on click. */
+  cursor: pointer;
+  transition: background 120ms var(--ds-ease-in-out);
+}
+
+.card:hover {
+  background: var(--dsw-alias-interactive-bg-hover, var(--dsw-specific-input-major));
+}
+
+/* ── Card actions: recharge (left) + refresh (right) ─────────────────────── */
+
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 1px;
+}
+
+.recharge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
+  font-size: 10px;
+  line-height: 14px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.recharge:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-primary);
+}
+
+.rechargePlus {
+  font-size: 11px;
+  line-height: 12px;
+  font-weight: 600;
+}
+
+.refreshBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.refreshBtn:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-primary);
+}
+/* ── 3D flip: front dashboard / back settings ───────────────────────────── */
+
+.card {
+  perspective: 1200px;
+}
+
+.cardInner {
+  display: grid;
+}
+
+.faceFront,
+.faceBack {
+  grid-area: 1 / 1;
+  /* Grid items default to min-width: auto — without this the face's content
+     (chart columns, metrics) would refuse to shrink and overflow the card to
+     the right, making it flush against the sidebar edge. */
+  min-width: 0;
+  backface-visibility: hidden;
+  transition: transform 420ms var(--ds-ease-in-out), visibility 420ms;
+}
+
+.faceFront {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+/* The back sits in the same grid cell, so while both faces are mounted the
+   card grows to the taller one (adaptive, no scrollbar); the back unmounts
+   after the flip-out animation so the size shrinks back to the front. */
+.faceBack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transform: rotateY(180deg);
+  visibility: hidden;
+}
+
+.card.flipped .faceFront {
+  transform: rotateY(180deg);
+  visibility: hidden;
+}
+
+.card.flipped .faceBack {
+  transform: rotateY(0deg);
+  visibility: visible;
+}
+
+/* ── Settings button (front) ─────────────────────────────────────────────── */
+
+.actionsLeft {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Bare settings gear: a plain glyph, no button chrome (no capsule). */
+.settingsGear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
+  /* The ⚙ glyph renders smaller than ↻ at the same font size, so bump it to
+     match the refresh icon's visual weight. */
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.settingsGear:hover {
+  color: var(--dsw-alias-label-primary);
+}
+
+/* ── Back face: settings panel ───────────────────────────────────────────── */
+
+.settingsHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.settingsTitle {
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 15px;
+  color: var(--dsw-alias-label-primary);
+}
+
+.settingsClose {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
+  font-size: 11px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.settingsClose:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-primary);
+}
+
+.settingsSection {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--dsw-alias-border-l2);
+}
+
+.settingsLabel {
+  font-size: 10px;
+  line-height: 14px;
+  color: var(--dsw-alias-label-secondary);
+}
+
+.tokenInput {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 4px 8px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: 7px;
+  background: var(--dsw-specific-input-major);
+  color: var(--dsw-alias-label-primary);
+  font-size: 11px;
+  line-height: 16px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.tokenInput::placeholder {
+  color: var(--dsw-alias-label-tertiary, var(--dsw-alias-label-secondary));
+}
+
+.settingsBtnPrimary,
+.settingsBtn,
+.backBtn {
+  align-self: flex-start;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  line-height: 16px;
+  cursor: pointer;
+}
+
+.settingsBtnPrimary {
+  border: 1px solid transparent;
+  background: var(--dsw-alias-button-primary-fill);
+  color: var(--dsw-alias-label-primary-foreground);
+}
+
+.settingsBtnPrimary:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.settingsBtn {
+  border: 1px solid var(--dsw-alias-border-l2);
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
+}
+
+.settingsBtn:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-primary);
+}
+
+.tokenState {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.tokenOk {
+  flex: none;
+  font-size: 10px;
+  line-height: 14px;
+  color: var(--dsw-alias-state-success-primary);
+  white-space: nowrap;
+}
+
+.settingsError {
+  font-size: 10px;
+  line-height: 14px;
+  color: var(--dsw-alias-interactive-bg-hover-danger, var(--dsw-alias-label-secondary));
+}
+
+.settingsNotice {
+  font-size: 10px;
+  line-height: 14px;
+  color: var(--dsw-alias-state-success-primary);
+}
+
+.tutorial {
+  margin: 0;
+  padding-left: 16px;
+  font-size: 10px;
+  line-height: 16px;
+  color: var(--dsw-alias-label-secondary);
+}
+
+.colorRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.colorName {
+  flex: 1;
+  font-size: 10px;
+  line-height: 14px;
+  color: var(--dsw-alias-label-secondary);
+}
+
+.colorInput {
+  width: 30px;
+  height: 18px;
+  padding: 0;
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: 4px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.colorReset {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
+  font-size: 11px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.colorReset:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-primary);
+}
+
+.colorNote {
+  font-size: 9px;
+  line-height: 12px;
+  color: var(--dsw-alias-label-tertiary, var(--dsw-alias-label-secondary));
+}
+
+.backBtn {
+  border: 1px solid var(--dsw-alias-border-l2);
+  background: var(--dsw-alias-button-elevated-fill);
+  color: var(--dsw-alias-label-primary);
+}
+
+.backBtn:hover {
+  background: var(--dsw-alias-button-floating-hover);
+}
+
+
+/* Each click plays ONE full rotation (0.8s), then the class is cleared on
+   animation end — a sub-second refresh still spins a complete circle. */
+.refreshBtn.spinning {
+  animation: refresh-spin 0.8s ease-out;
+  color: var(--dsw-alias-label-primary);
+}
+
+@keyframes refresh-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .refreshBtn.spinning {
+    animation: none;
+  }
+}
+
+/* ── Level 1: balance and today cost ─────────────────────────────────────── */
+
+.l1 {
+  display: flex;
+  align-items: stretch;
+  gap: 12px;
+}
+
+.metric {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.metricLabel {
+  font-size: 10px;
+  line-height: 14px;
+  color: var(--dsw-alias-label-secondary);
+}
+
+.metricValue {
+  font-size: 17px;
+  line-height: 22px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+
+/* ── Level 2: today's tokens ─────────────────────────────────────────────── */
+
+.l2 {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--dsw-alias-label-secondary);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.tokensValue {
+  color: var(--dsw-alias-label-primary);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Always-visible breakdown rows: cache hit / input / output + month/lifetime. */
+.breakdown {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 10px;
+  font-size: 9px;
+  line-height: 13px;
+  color: var(--dsw-alias-label-tertiary, var(--dsw-alias-label-secondary));
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Level 3: badge, estimate, updated stamp ─────────────────────────────── */
+
+.l3 {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  min-width: 0;
+  font-size: 10px;
+  line-height: 14px;
+  color: var(--dsw-alias-label-tertiary, var(--dsw-alias-label-secondary));
+}
+
+/* The updated stamp + gear ride as one right-aligned group, with a tight
+   internal gap between them. */
+.l3Right {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+}
+
+.badge {
+  flex: none;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-secondary);
+  font-size: 10px;
+  line-height: 14px;
+  white-space: nowrap;
+}
+
+.badgeOff {
+  background: var(--dsw-alias-state-success-tertiary);
+  color: var(--dsw-alias-state-success-primary);
+}
+
+.estimate {
+  flex: none;
+  white-space: nowrap;
+}
+
+.updated {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── 7-day chart ─────────────────────────────────────────────────────────── */
+
+.chartBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 2px;
+  padding-top: 6px;
+  border-top: 1px solid var(--dsw-alias-border-l2);
+}
+
+.chartTitle {
+  font-size: 10px;
+  line-height: 14px;
+  color: var(--dsw-alias-label-secondary);
+}
+
+.chart {
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+  height: 46px;
+}
+
+.chartCol {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.chartTrack {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+  border-bottom: 1px solid var(--dsw-alias-border-l2);
+}
+
+.chartBars {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 1px;
+  width: 100%;
+  height: 100%;
+}
+
+.barPeak,
+.barOff,
+.barTotal {
+  flex: none;
+  width: 100%;
+  border-radius: 2px 2px 0 0;
+  min-height: 1px;
+}
+
+.barPeak {
+  background: var(--usage-bar-peak, var(--dsw-alias-label-tertiary, var(--dsw-alias-label-secondary)));
+}
+
+.barOff {
+  background: var(--usage-bar-off, var(--dsw-alias-state-success-primary));
+}
+
+/* Official platform totals render as a single brand-colored bar. */
+.barTotal {
+  background: var(--usage-bar-total, var(--dsw-alias-state-business-primary));
+}
+
+/* A dot under today's column marks the current day. */
+.todayMark {
+  position: absolute;
+  bottom: -1px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--dsw-alias-brand-primary);
+}
+
+.chartLabel {
+  flex: none;
+  max-width: 100%;
+  font-size: 9px;
+  line-height: 12px;
+  color: var(--dsw-alias-label-tertiary, var(--dsw-alias-label-secondary));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chartLabelToday {
+  color: var(--dsw-alias-label-primary);
+  font-weight: 600;
+}
+
+.legend {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  font-size: 9px;
+  line-height: 12px;
+  color: var(--dsw-alias-label-tertiary, var(--dsw-alias-label-secondary));
+}
+
+.legendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.legendDot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+}
+
+.dotPeak {
+  background: var(--usage-bar-peak, var(--dsw-alias-label-tertiary, var(--dsw-alias-label-secondary)));
+}
+
+.dotOff {
+  background: var(--usage-bar-off, var(--dsw-alias-state-success-primary));
+}
+
+.dotTotal {
+  background: var(--usage-bar-total, var(--dsw-alias-state-business-primary));
+}
+
+.windowHint {
+  margin-left: auto;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.noHistory {
+  font-size: 9px;
+  line-height: 12px;
+  color: var(--dsw-alias-label-tertiary, var(--dsw-alias-label-secondary));
+}
+
+/* ── Rail (collapsed) pill: period dot + short balance ───────────────────── */
+
+.rail {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: auto;
+  max-width: 46px;
+  height: 36px;
+  padding: 0 6px;
+  box-sizing: border-box;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
+  font-size: 10px;
+  line-height: 14px;
+  cursor: pointer;
+}
+
+.rail:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+}
+
+.railDot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--dsw-alias-label-tertiary, var(--dsw-alias-label-secondary));
+}
+
+.railDot.offPeak {
+  background: var(--dsw-alias-state-success-primary);
+}
+
+.railBalance {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Usage card: full card above Settings when wide, compact period pill on the
+   rail. Visual hierarchy — level 1: balance + today cost (large metrics);
+   level 2: today's tokens; level 3: badge/estimate/updated + chart legend.
+   Tokens use the sidebar's design aliases so the card follows both themes. */
+
+.card {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  padding: 10px 12px 9px;
+  margin: 4px 0 2px;
+  box-sizing: border-box;
+  border: 1px solid var(--dsw-alias-border-l2-darkmode-thin, var(--dsw-alias-border-l2));
+  border-radius: 14px;
+  /* Same surface as the composer input box. */
+  background: var(--dsw-specific-input-major);
+  box-shadow: var(--dsw-shadow-lv2);
+  color: var(--dsw-alias-label-primary);
+  font-size: 12px;
+  line-height: 16px;
+  text-align: left;
+  /* The whole card toggles expanded/collapsed on click. */
+  cursor: pointer;
+  transition: background 120ms var(--ds-ease-in-out);
+}
+
+.card:hover {
+  background: var(--dsw-alias-interactive-bg-hover, var(--dsw-specific-input-major));
+}
+
+/* ── Card actions: recharge (left) + refresh (right) ─────────────────────── */
+
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 1px;
+}
+
+.recharge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
+  font-size: 10px;
+  line-height: 14px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.recharge:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-primary);
+}
+
+.rechargePlus {
+  font-size: 11px;
+  line-height: 12px;
+  font-weight: 600;
+}
+
+.refreshBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.refreshBtn:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-primary);
+}
+/* ── 3D flip: front dashboard / back settings ───────────────────────────── */
+
+.card {
+  perspective: 1200px;
+}
+
+.cardInner {
+  display: grid;
+}
+
+.faceFront,
+.faceBack {
+  grid-area: 1 / 1;
+  /* Grid items default to min-width: auto — without this the face's content
+     (chart columns, metrics) would refuse to shrink and overflow the card to
+     the right, making it flush against the sidebar edge. */
+  min-width: 0;
+  backface-visibility: hidden;
+  transition: transform 420ms var(--ds-ease-in-out), visibility 420ms;
+}
+
+.faceFront {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+/* The back sits in the same grid cell, so while both faces are mounted the
+   card grows to the taller one (adaptive, no scrollbar); the back unmounts
+   after the flip-out animation so the size shrinks back to the front. */
+.faceBack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transform: rotateY(180deg);
+  visibility: hidden;
+}
+
+.card.flipped .faceFront {
+  transform: rotateY(180deg);
+  visibility: hidden;
+}
+
+.card.flipped .faceBack {
+  transform: rotateY(0deg);
+  visibility: visible;
+}
+
+/* ── Settings button (front) ─────────────────────────────────────────────── */
+
+.actionsLeft {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Bare settings gear: a plain glyph, no button chrome (no capsule). */
+.settingsGear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
+  /* The ⚙ glyph renders smaller than ↻ at the same font size, so bump it to
+     match the refresh icon's visual weight. */
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.settingsGear:hover {
+  color: var(--dsw-alias-label-primary);
+}
+
+/* ── Back face: settings panel ───────────────────────────────────────────── */
+
+.settingsHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.settingsTitle {
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 15px;
+  color: var(--dsw-alias-label-primary);
+}
+
+.settingsClose {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
+  font-size: 11px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.settingsClose:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-primary);
+}
+
+.settingsSection {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--dsw-alias-border-l2);
+}
+
+.settingsLabel {
+  font-size: 10px;
+  line-height: 14px;
+  color: var(--dsw-alias-label-secondary);
+}
+
+.tokenInput {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 4px 8px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: 7px;
+  background: var(--dsw-specific-input-major);
+  color: var(--dsw-alias-label-primary);
+  font-size: 11px;
+  line-height: 16px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.tokenInput::placeholder {
+  color: var(--dsw-alias-label-tertiary, var(--dsw-alias-label-secondary));
+}
+
+.settingsBtnPrimary,
+.settingsBtn,
+.backBtn {
+  align-self: flex-start;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  line-height: 16px;
+  cursor: pointer;
+}
+
+.settingsBtnPrimary {
+  border: 1px solid transparent;
+  background: var(--dsw-alias-button-primary-fill);
+  color: var(--dsw-alias-label-primary-foreground);
+}
+
+.settingsBtnPrimary:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.settingsBtn {
+  border: 1px solid var(--dsw-alias-border-l2);
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
+}
+
+.settingsBtn:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-primary);
+}
+
+.tokenState {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.tokenOk {
+  flex: none;
+  font-size: 10px;
+  line-height: 14px;
+  color: var(--dsw-alias-state-success-primary);
+  white-space: nowrap;
+}
+
+.settingsError {
+  font-size: 10px;
+  line-height: 14px;
+  color: var(--dsw-alias-interactive-bg-hover-danger, var(--dsw-alias-label-secondary));
+}
+
+.settingsNotice {
+  font-size: 10px;
+  line-height: 14px;
+  color: var(--dsw-alias-state-success-primary);
+}
+
+.tutorial {
+  margin: 0;
+  padding-left: 16px;
+  font-size: 10px;
+  line-height: 16px;
+  color: var(--dsw-alias-label-secondary);
+}
+
+.colorRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.colorName {
+  flex: 1;
+  font-size: 10px;
+  line-height: 14px;
+  color: var(--dsw-alias-label-secondary);
+}
+
+.colorInput {
+  width: 30px;
+  height: 18px;
+  padding: 0;
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: 4px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.colorReset {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
+  font-size: 11px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.colorReset:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-primary);
+}
+
+.colorNote {
+  font-size: 9px;
+  line-height: 12px;
+  color: var(--dsw-alias-label-tertiary, var(--dsw-alias-label-secondary));
+}
+
+.backBtn {
+  border: 1px solid var(--dsw-alias-border-l2);
+  background: var(--dsw-alias-button-elevated-fill);
+  color: var(--dsw-alias-label-primary);
+}
+
+.backBtn:hover {
+  background: var(--dsw-alias-button-floating-hover);
+}
+
+
+/* Each click plays ONE full rotation (0.8s), then the class is cleared on
+   animation end — a sub-second refresh still spins a complete circle. */
+.refreshBtn.spinning {
+  animation: refresh-spin 0.8s ease-out;
+  color: var(--dsw-alias-label-primary);
+}
+
+@keyframes refresh-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .refreshBtn.spinning {
+    animation: none;
+  }
+}
+
+/* ── Level 1: balance and today cost ─────────────────────────────────────── */
+
+.l1 {
+  display: flex;
+  align-items: stretch;
+  gap: 12px;
+}
+
+.metric {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.metricLabel {
+  font-size: 10px;
+  line-height: 14px;
+  color: var(--dsw-alias-label-secondary);
+}
+
+.metricValue {
+  font-size: 17px;
+  line-height: 22px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Level 2: today's tokens ─────────────────────────────────────────────── */
+
+.l2 {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--dsw-alias-label-secondary);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.tokensValue {
+  color: var(--dsw-alias-label-primary);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Always-visible breakdown rows: cache hit / input / output + month/lifetime. */
+.breakdown {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 10px;
+  font-size: 9px;
+  line-height: 13px;
+  color: var(--dsw-alias-label-tertiary, var(--dsw-alias-label-secondary));
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Level 3: badge, estimate, updated stamp ─────────────────────────────── */
+
+.l3 {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  min-width: 0;
+  font-size: 10px;
+  line-height: 14px;
+  color: var(--dsw-alias-label-tertiary, var(--dsw-alias-label-secondary));
+}
+
+/* The updated stamp + gear ride as one right-aligned group, with a tight
+   internal gap between them. */
+.l3Right {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+}
+
+.badge {
+  flex: none;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-secondary);
+  font-size: 10px;
+  line-height: 14px;
+  white-space: nowrap;
+}
+
+.badgeOff {
+  background: var(--dsw-alias-state-success-tertiary);
+  color: var(--dsw-alias-state-success-primary);
+}
+
+.estimate {
+  flex: none;
+  white-space: nowrap;
+}
+
+.updated {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── 7-day chart ─────────────────────────────────────────────────────────── */
+
+.chartBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 2px;
+  padding-top: 6px;
+  border-top: 1px solid var(--dsw-alias-border-l2);
+}
+
+.chartTitle {
+  font-size: 10px;
+  line-height: 14px;
+  color: var(--dsw-alias-label-secondary);
+}
+
+.chart {
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+  height: 46px;
+}
+
+.chartCol {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.chartTrack {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+  border-bottom: 1px solid var(--dsw-alias-border-l2);
+}
+
+.chartBars {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 1px;
+  width: 100%;
+  height: 100%;
+}
+
+.barPeak,
+.barOff,
+.barTotal {
+  flex: none;
+  width: 100%;
+  border-radius: 2px 2px 0 0;
+  min-height: 1px;
+}
+
+.barPeak {
+  background: var(--usage-bar-peak, var(--dsw-alias-label-tertiary, var(--dsw-alias-label-secondary)));
+}
+
+.barOff {
+  background: var(--usage-bar-off, var(--dsw-alias-state-success-primary));
+}
+
+/* Official platform totals render as a single brand-colored bar. */
+.barTotal {
+  background: var(--usage-bar-total, var(--dsw-alias-state-business-primary));
+}
+
+/* A dot under today's column marks the current day. */
+.todayMark {
+  position: absolute;
+  bottom: -1px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--dsw-alias-brand-primary);
+}
+
+.chartLabel {
+  flex: none;
+  max-width: 100%;
+  font-size: 9px;
+  line-height: 12px;
+  color: var(--dsw-alias-label-tertiary, var(--dsw-alias-label-secondary));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chartLabelToday {
+  color: var(--dsw-alias-label-primary);
+  font-weight: 600;
+}
+
+.legend {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  font-size: 9px;
+  line-height: 12px;
+  color: var(--dsw-alias-label-tertiary, var(--dsw-alias-label-secondary));
+}
+
+.legendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.legendDot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+}
+
+.dotPeak {
+  background: var(--usage-bar-peak, var(--dsw-alias-label-tertiary, var(--dsw-alias-label-secondary)));
+}
+
+.dotOff {
+  background: var(--usage-bar-off, var(--dsw-alias-state-success-primary));
+}
+
+.dotTotal {
+  background: var(--usage-bar-total, var(--dsw-alias-state-business-primary));
+}
+
+.windowHint {
+  margin-left: auto;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.noHistory {
+  font-size: 9px;
+  line-height: 12px;
+  color: var(--dsw-alias-label-tertiary, var(--dsw-alias-label-secondary));
+}
+
+/* ── Rail (collapsed) pill: period dot + short balance ───────────────────── */
+
+.rail {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: auto;
+  max-width: 46px;
+  height: 36px;
+  padding: 0 6px;
+  box-sizing: border-box;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
+  font-size: 10px;
+  line-height: 14px;
+  cursor: pointer;
+}
+
+.rail:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+}
+
+.railDot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--dsw-alias-label-tertiary, var(--dsw-alias-label-secondary));
+}
+
+.railDot.offPeak {
+  background: var(--dsw-alias-state-success-primary);
+}
+
+.railBalance {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
