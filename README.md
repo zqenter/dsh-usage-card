@@ -1,26 +1,62 @@
 # dsh-usage-card — DSH 侧边栏余额用量卡片
 
-DeepSeek Harness 左侧边栏的 **余额用量卡片** 插件：侧边栏底部（设置按钮上方）显示 DeepSeek 余额、今日 Tokens/金额、峰谷时段徽标，宽侧栏显示完整卡片，窄侧栏（56px）显示紧凑余额胶囊。
+DeepSeek Harness 左侧边栏的 **余额用量卡片** 插件：显示在侧边栏底部（设置按钮上方）。宽侧栏显示完整卡片，窄侧栏（56px）显示紧凑的"时段圆点 + 余额"胶囊。
 
-## 功能
+## 功能（卡片到底显示什么）
 
-- **余额** — 通过 host 端 billing 获取，API Key 不出浏览器
-- **峰谷时段** — 按 DeepSeek 官方峰谷窗口计算（峰: 北京 9–12 点 / 14–18 点; 其余谷时段半价），谷时段显示绿色「谷 · 半价」徽标
-- **今日 Tokens / 今日金额** — 按价格表对今日事件定价估算
-- 每 60 秒轮询刷新，点击卡片立即刷新
+卡片显示三类数据，其中**「今日金额」有两种来源（官方 / 估算）**——这是最容易搞混的地方：
+
+### 1️⃣ 余额（官方）
+- 显示你的 DeepSeek **账户余额**（¥ 或 $ 按币种自适应）
+- 来源：官方接口 `api.deepseek.com/user/balance`，用 **API Key（`sk-` 开头）** 调用
+- 数据只经过 host 端，API Key 不出浏览器
+
+### 2️⃣ 今日 Tokens / 今日金额 —— 官方 或 估算，二选一
+
+| 模式（卡片标签） | 什么时候显示 | 数据来源 |
+|---|---|---|
+| **官方** | 配置了 **`DEEPSEEK_PLATFORM_TOKEN`**（开放平台 F12 复制的 `userToken`） | `platform.deepseek.com/api/v0/usage/...` 平台官网的**真实消费数据** |
+| **估算** | 没配平台 token | 基于本地会话日志按价目表**估算**（金额是估算值，卡片上有标注） |
+
+> 卡片上有 **⚙ 按钮**：点击翻面，出现「平台 Token」输入框——把 F12 复制的 `userToken` 粘贴进去保存（保存前自动验证），卡片就从「估算」切到「**官方**」。卡片内置了完整的 6 步 F12 教程。
+
+### 3️⃣ 峰谷时段徽标
+- 按 DeepSeek 官方计费窗口计算：**峰** = 北京 09:00–12:00、14:00–18:00；其余为**谷**（半价）
+- 谷时段显示绿色「谷 · 半价」徽标
+
+### 其他
+- 每 60 秒自动轮询刷新，点击卡片立即刷新
+- 7 日用量柱状图（峰/谷分色堆叠）
+
+---
+
+## ⚠️ 两个 token 的分工（务必分清）
+
+| Token | 长什么样 | 从哪拿 | 卡片用它显示什么 |
+|---|---|---|---|
+| **`DEEPSEEK_API_KEY`** | `sk-` 开头 | 开放平台 → **API Keys** 页创建 | **余额**（调 `api.deepseek.com/user/balance`） |
+| **`DEEPSEEK_PLATFORM_TOKEN`** | F12 复制的 `userToken`（`eyJ...` 长串） | 开放平台 → **F12 → Application → Local Storage** | **今日金额/用量（官方）**（调 `platform.deepseek.com/api/v0/usage/...`） |
+
+- 只配 API_KEY → 余额显示官方，今日金额显示**估算**
+- 两个都配 → 余额 + 今日金额**全部官方**，真实数据
+- 只配 PLATFORM_TOKEN → 今日金额官方，但余额取不到（余额需要 API Key）
+
+> 卡片 **⚙ 设置面**里粘贴的就是 `PLATFORM_TOKEN`（userToken）；卡片内置 6 步教程教你怎么在 F12 里找到它。
+
+---
 
 ## 组成
 
 ```
-packages/client/ui-usage-card/    # 前端插件（UsageCard.tsx / CSS / store）
-packages/host/billing/            # host 端计费服务（余额/用量/定价）
+packages/client/ui-usage-card/    # 前端插件（UsageCard.tsx / CSS / store / 内置教程）
+packages/host/billing/            # host 端计费服务（余额 balance / 平台用量 platform / 定价 pricing）
 packages/bundle/web-app/          # cordis 补丁 + 打包集成
 （另有侧边栏/标题栏 UI 微调 CSS）
 ```
 
 ## 安装（应用到 DSH）
 
-本插件是对 DSH（`deepseek-ai/deepseek-harness`）的一个本地提交，包含 41 个文件的改动。两种应用方式：
+本插件是对 DSH（`deepseek-ai/deepseek-harness`）的一个本地提交。两种应用方式：
 
 ### 方式 A：打补丁
 
@@ -34,90 +70,48 @@ pnpm install && pnpm build:lib
 
 将 `packages/` 下的目录复制到 DSH 仓库对应位置，并把 `packages/bundle/web-app/cordis.patch.yml` 与 `package.json` 的改动合入。
 
-## 说明
+---
 
-- 余额数据来自 host 端 `billing` 服务，浏览器侧不接触 API Key
-- 金额为估算值（按默认价格表），部署端可配置 `dsh-host-billing` 的 `pricing`
-- 时段徽标随 60s 刷新周期更新
+## Token 获取教程
+
+### 一、F12 复制 userToken（给「今日金额官方」用）
+
+**第 1 步**：用 Chrome/Edge 打开并登录 <https://platform.deepseek.com>
+
+**第 2 步**：按 **F12**（或右键 → 检查）打开开发者工具，顶部选 **Application**（应用）标签页
+
+**第 3 步**：左侧展开 **Local Storage**（本地存储）→ 点击 `https://platform.deepseek.com`
+
+**第 4 步**：在右侧键值列表里找到 **`userToken`**，双击 Value 列，全选复制那个长串（形如 `eyJ...`）
+
+**第 5 步**：把复制到的 `userToken` 粘贴到**卡片 ⚙ 设置面**的「平台 Token」输入框 → 保存（会自动验证）。成功后卡片「今日金额」标签显示**官方**。
+
+> 也可以不走卡片设置面：把这个值配成环境变量 `DEEPSEEK_PLATFORM_TOKEN`，重启 DSH 服务即可。
+
+### 二、创建 API Key（给「余额」用）
+
+**第 1 步**：登录开放平台 → 左侧 **API Keys** → **创建 API Key**
+
+**第 2 步**：复制生成的 `sk-` 开头密钥，配到环境变量 `DEEPSEEK_API_KEY`（macOS launchd plist 加 EnvironmentVariables / Windows `setx DEEPSEEK_API_KEY "sk-..."`）
+
+**第 3 步**：重启 DSH 服务，卡片「余额」显示官方数值
+
+### 三、验证 token 是否有效
+
+```bash
+# 验证 API Key（余额）
+curl -s https://api.deepseek.com/user/balance -H "Authorization: Bearer sk-你的key"
+# 返回 {"is_available":true,"balance_infos":[...]} 即有效
+```
 
 ---
 
-
-## 开放平台 Token 获取 & 余额/用量明细教程
-
-> 卡片本身不含密钥逻辑——安装插件后它就会显示余额和用量，**前提是你去 DeepSeek 开放平台抓一个 API Token**，并把它配给 DSH（与 DeepSeek 提供者共用一把钥匙）。本教程分三部分：**① 抓 Token → ② 看懂余额/用量明细 → ③ 喂给卡片**。
-
-### 一、从开放平台抓 Token（F12 复制法）
-
-**第 1 步：打开开放平台并登录**
-
-浏览器打开 <https://platform.deepseek.com>，登录你的账号（手机号/邮箱）。
-
-**第 2 步：按 F12 打开开发者工具**
-
-- 键盘按 **F12**（或右键 → 检查）
-- 顶部面板选 **Application**（中文界面叫「应用」）
-
-**第 3 步：找到 Local Storage**
-
-- 左侧展开 **Local Storage**（本地存储）→ 点开 `https://platform.deepseek.com` 这一项
-- 右侧会出现该网站存的所有键值对
-
-**第 4 步：复制 token**
-
-- 在键值列表里找名字带 token 的条目，常见的有：
-  `token`、`userToken`、`access_token`、`apiKey`、`ds_token` 等
-- 找到后，**双击 Value 那一列** → 全选 → 复制那个长字符串
-
-**第 5 步：判断你复制到的是什么（重要）**
-
-| 复制的值长什么样 | 是什么 | 能不能用 |
-|---|---|---|
-| 以 `sk-` 开头（约 35 位） | **API Key**（开放平台的密钥） | ✅ 直接可用 |
-| 形如 `eyJxxxxx.yyyyy.zzzzz`（两三个点分隔的长串） | **网页会话 JWT**（网站内部接口用的） | ⚠️ 不一定能直接查余额，见下方验证 |
-
-**第 6 步：验证这个 token 能不能查余额**
-
-```bash
-curl -s https://api.deepseek.com/user/balance \
-  -H "Authorization: Bearer 你复制的token"
-```
-
-- 返回 `{"is_available":true,"balance_infos":[...]}` → **能用**，记下这个 token
-- 返回 401 / 认证失败 → 这个 token 查不了余额，改用下面的「兜底：API Keys 页面」方法
-
-> **兜底（最稳的方法）**：登录开放平台 → 左侧 **API Keys** → **创建 API Key** → 复制生成的 `sk-` 开头的密钥。这个一定能查余额，也是卡片最可靠的 token。
-
-### 三、把这个 Token 喂给卡片
-
-billing 默认从环境变量 `DEEPSEEK_API_KEY` 读 key（与 DeepSeek LLM 提供者同一凭证源）：
-
-```bash
-# 临时生效（当前终端）
-export DEEPSEEK_API_KEY=sk-你的key
-```
-
-常驻配置：
-- **macOS（launchd）**：在 DSH 服务的 plist 加
-  ```xml
-  <key>EnvironmentVariables</key>
-  <dict>
-    <key>DEEPSEEK_API_KEY</key>
-    <string>sk-你的key</string>
-  </dict>
-  ```
-- **Windows**：`setx DEEPSEEK_API_KEY "sk-你的key"`（重开终端生效）
-
-改完**重启 DSH 服务**，侧边栏底部（设置按钮上方）即显示余额卡片，每 60 秒自动刷新，点击卡片立即刷新。
-
-> 如果 DSH 已在设置里配过 DeepSeek 提供者的 API Key，卡片自动复用同一把钥匙，无需重复配置。
-
-### 四、常见问题
+## 常见问题
 
 | 现象 | 原因 / 处理 |
 |---|---|
-| 卡片不显示 / 余额空 | `DEEPSEEK_API_KEY` 没配或值不对 → 按第一部分重新抓 key、第三部分配置 |
-| 显示 401 / 未授权 | key 无效或过期 → 去开放平台重新生成 |
-| 改了 key 不生效 | 环境变量改完要**重启 DSH 服务** |
-| 今日金额不准 | 是估算值（按默认价目表）；单价不同时配置 `dsh-host-billing` 的 `pricing`，明细以开放平台「用量管理」为准 |
-| 想确认 key 有没有额度 | 用第二部分的 `curl` 命令直接查 |
+| 余额空 | `DEEPSEEK_API_KEY` 没配或无效 → 创建 API Key 并配置 |
+| 今日金额显示「估算」而不是「官方」 | 没配 `DEEPSEEK_PLATFORM_TOKEN`（userToken）→ 按教程一配置 |
+| 粘贴 userToken 保存时报无效 | token 过期/复制错 → 重新 F12 复制最新 `userToken` |
+| 改了环境变量不生效 | 改完要**重启 DSH 服务** |
+| 今日金额不准 | 估算模式按默认价目表；配了官方 token 后即为平台真实数据 |
