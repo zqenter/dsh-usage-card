@@ -1,3 +1,5 @@
+![Uploading image.png…]()
+
 # dsh-usage-card — DSH 侧边栏余额用量卡片
 
 DeepSeek Harness 左侧边栏的 **余额用量卡片** 插件：显示在侧边栏底部（设置按钮上方）。宽侧栏显示完整卡片，窄侧栏（56px）显示紧凑的"时段圆点 + 余额"胶囊。
