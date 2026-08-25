@@ -1,4 +1,4 @@
-![Uploading image.png…]()
+<img width="265" height="274" alt="image" src="https://github.com/user-attachments/assets/97a9157c-11ff-4bdb-8241-45c38c025f37" />
 
 # dsh-usage-card — DSH 侧边栏余额用量卡片
 
