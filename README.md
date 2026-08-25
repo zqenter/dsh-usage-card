@@ -42,33 +42,65 @@ pnpm install && pnpm build:lib
 
 ---
 
-## Token（DeepSeek API Key）配置详细教程
 
-余额卡片本身**不填写密钥**——它通过 host 端 billing 服务代读 DeepSeek 余额，密钥只存在于宿主侧，永不进入浏览器。**你需要做的只是把 DeepSeek API Key 配给 DSH**（与 DeepSeek LLM 提供者共用同一把钥匙）。
+## 开放平台 Token 获取 & 余额/用量明细教程
 
-### 第 1 步：获取 API Key
+> 卡片本身不含密钥逻辑——安装插件后它就会显示余额和用量，**前提是你去 DeepSeek 开放平台抓一个 API Token**，并把它配给 DSH（与 DeepSeek 提供者共用一把钥匙）。本教程分三部分：**① 抓 Token → ② 看懂余额/用量明细 → ③ 喂给卡片**。
 
-1. 打开 DeepSeek 开放平台：<https://platform.deepseek.com>
-2. 登录 → 左侧 **API Keys** → **创建 API Key**
-3. 复制生成的密钥（形如 `sk-xxxxxxxx...`），**只显示一次，先复制保存好**
-4. 充值/确认账户有余额（查询余额本身免费）
+### 一、去开放平台抓 Token（卡片数据来源）
 
-> ⚠️ API Key 相当于密码，别提交进代码仓库、别发到聊天里。
+1. 打开 **DeepSeek 开放平台**：<https://platform.deepseek.com>
+2. 登录（手机号 / 邮箱注册过的账号，与 chat.deepseek.com 同一个账号体系）
+3. 左侧菜单 → **API Keys** → 点 **「创建 API Key」**
+4. 给 key 起个名字（如 `usage-card`），点确认
+5. 复制生成的密钥（`sk-` 开头，约 35 位），**只显示一次，立刻保存**
 
-### 第 2 步：把 Key 配给 DSH（三选一）
+要点：
 
-#### 方式 A：环境变量 `DEEPSEEK_API_KEY`（推荐，最简单）
+- **这一个 key 就能查余额和用量**（余额接口 `GET /user/balance` 用任意有效 key 都可调用）
+- 想隔离的话可以**单独建一个「查询专用」key**（只用来给卡片/脚本查余额，不参与模型调用），和调模型用的 key 分开管理
+- ⚠️ key 等于密码：别提交进代码、别发聊天/截图
 
-billing 默认读取环境变量 `DEEPSEEK_API_KEY`：
+### 二、看懂余额与用量明细（卡片显示的是什么）
+
+#### 余额（卡片「余额」项）
+
+来自 DeepSeek 接口 `GET https://api.deepseek.com/user/balance`。命令行自查：
 
 ```bash
-# 临时验证（当前终端有效）
+curl -s https://api.deepseek.com/user/balance \
+  -H "Authorization: Bearer sk-你的key"
+```
+
+返回字段说明：
+
+| 字段 | 含义 |
+|---|---|
+| `is_available` | 账户是否可用 |
+| `balance_infos[].currency` | 币种（CNY / USD） |
+| `balance_infos[].total_balance` | **总余额**（卡片显示的数值） |
+| `balance_infos[].granted_balance` | 赠送余额（活动赠送部分） |
+| `balance_infos[].topped_up_balance` | 充值余额 |
+
+> 总余额 = 赠送余额 + 充值余额。卡片显示的就是 `total_balance`，按币种自适应显示 ¥ / $。
+
+#### Token 消费明细（卡片「今日 Tokens / 今日金额」）
+
+- **开放平台视角**：登录 platform.deepseek.com → 左侧 **「用量管理 / Usage」**，可按日/小时查看 **token 消耗明细**（输入/输出/缓存 token 分开统计）——这是官方的消费明细。
+- **卡片视角**：卡片上的「今日 Tokens / 今日金额」由 `dsh-host-billing` 按 DSH 配置的价目表**逐事件估算**（金额是估算值，卡片上有标注），用于侧边栏快速看一眼今天的消耗，不用每次去开放平台。
+- **峰谷时段**：DeepSeek 官方计费分峰谷（高峰：北京 09:00–12:00、14:00–18:00；其余谷时段半价）。卡片按官方窗口算出当前时段，谷时段显示绿色「谷 · 半价」徽标。
+
+### 三、把这个 Token 喂给卡片
+
+billing 默认从环境变量 `DEEPSEEK_API_KEY` 读 key（与 DeepSeek LLM 提供者同一凭证源）：
+
+```bash
+# 临时生效（当前终端）
 export DEEPSEEK_API_KEY=sk-你的key
 ```
 
-想让 DSH 服务常驻读取：
-
-- **macOS（launchd 启动 DSH）**：在 DSH 服务的 launchd plist 里加：
+常驻配置：
+- **macOS（launchd）**：在 DSH 服务的 plist 加
   ```xml
   <key>EnvironmentVariables</key>
   <dict>
@@ -76,47 +108,18 @@ export DEEPSEEK_API_KEY=sk-你的key
     <string>sk-你的key</string>
   </dict>
   ```
-  或写到 shell 启动脚本里 `export DEEPSEEK_API_KEY=...` 再启动 DSH。
+- **Windows**：`setx DEEPSEEK_API_KEY "sk-你的key"`（重开终端生效）
 
-- **Windows**：
-  ```bat
-  setx DEEPSEEK_API_KEY "sk-你的key"
-  ```
-  （重新打开终端生效；或写进启动脚本 `set DEEPSEEK_API_KEY=sk-你的key`）
+改完**重启 DSH 服务**，侧边栏底部（设置按钮上方）即显示余额卡片，每 60 秒自动刷新，点击卡片立即刷新。
 
-#### 方式 B：在 DSH 设置里配置 DeepSeek 提供者密钥
+> 如果 DSH 已在设置里配过 DeepSeek 提供者的 API Key，卡片自动复用同一把钥匙，无需重复配置。
 
-如果 DSH 已通过界面/配置文件配好了 DeepSeek LLM 提供者的 API Key（同一个 key），billing 会自动复用**同一凭证源**——无需重复配置，余额卡片直接就能显示。
-
-#### 方式 C：自定义环境变量名
-
-部署端若不想用默认名，可给 `dsh-host-billing` 配置 `apiKeyEnv` 指向别的环境变量：
-```yaml
-# dsh-host-billing 配置示例
-billing:
-  apiKeyEnv: MY_CUSTOM_KEY_ENV
-```
-
-### 第 3 步：验证 Key 可用
-
-```bash
-curl -s https://api.deepseek.com/user/balance \
-  -H "Authorization: Bearer sk-你的key"
-```
-应返回类似：
-```json
-{"is_available":true,"balance_infos":[{"currency":"CNY","total_balance":"110.00",...}]}
-```
-
-### 第 4 步：重启 DSH 看卡片
-
-重启 DSH 服务后，侧边栏底部（设置按钮上方）应显示余额卡片；数据每 60 秒自动刷新，点击卡片立即刷新。
-
-### 常见问题
+### 四、常见问题
 
 | 现象 | 原因 / 处理 |
 |---|---|
-| 卡片不显示或余额为空 | `DEEPSEEK_API_KEY` 未配置或值不对 → 按第 2、3 步检查 |
-| 改了 Key 不生效 | 环境变量改了要**重启 DSH 服务**；billing 每次请求都重新解析，但环境本身要重启加载 |
-| 余额显示 0 / 金额不对 | 确认账户有余额；估算金额按默认价目表，单价不同时配置 `dsh-host-billing` 的 `pricing` |
-| 显示「未授权 / 401」 | Key 无效或已过期 → 去 platform.deepseek.com 重新生成 |
+| 卡片不显示 / 余额空 | `DEEPSEEK_API_KEY` 没配或值不对 → 按第一部分重新抓 key、第三部分配置 |
+| 显示 401 / 未授权 | key 无效或过期 → 去开放平台重新生成 |
+| 改了 key 不生效 | 环境变量改完要**重启 DSH 服务** |
+| 今日金额不准 | 是估算值（按默认价目表）；单价不同时配置 `dsh-host-billing` 的 `pricing`，明细以开放平台「用量管理」为准 |
+| 想确认 key 有没有额度 | 用第二部分的 `curl` 命令直接查 |
