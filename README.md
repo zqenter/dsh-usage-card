@@ -47,48 +47,46 @@ pnpm install && pnpm build:lib
 
 > 卡片本身不含密钥逻辑——安装插件后它就会显示余额和用量，**前提是你去 DeepSeek 开放平台抓一个 API Token**，并把它配给 DSH（与 DeepSeek 提供者共用一把钥匙）。本教程分三部分：**① 抓 Token → ② 看懂余额/用量明细 → ③ 喂给卡片**。
 
-### 一、去开放平台抓 Token（卡片数据来源）
+### 一、从开放平台抓 Token（F12 复制法）
 
-1. 打开 **DeepSeek 开放平台**：<https://platform.deepseek.com>
-2. 登录（手机号 / 邮箱注册过的账号，与 chat.deepseek.com 同一个账号体系）
-3. 左侧菜单 → **API Keys** → 点 **「创建 API Key」**
-4. 给 key 起个名字（如 `usage-card`），点确认
-5. 复制生成的密钥（`sk-` 开头，约 35 位），**只显示一次，立刻保存**
+**第 1 步：打开开放平台并登录**
 
-要点：
+浏览器打开 <https://platform.deepseek.com>，登录你的账号（手机号/邮箱）。
 
-- **这一个 key 就能查余额和用量**（余额接口 `GET /user/balance` 用任意有效 key 都可调用）
-- 想隔离的话可以**单独建一个「查询专用」key**（只用来给卡片/脚本查余额，不参与模型调用），和调模型用的 key 分开管理
-- ⚠️ key 等于密码：别提交进代码、别发聊天/截图
+**第 2 步：按 F12 打开开发者工具**
 
-### 二、看懂余额与用量明细（卡片显示的是什么）
+- 键盘按 **F12**（或右键 → 检查）
+- 顶部面板选 **Application**（中文界面叫「应用」）
 
-#### 余额（卡片「余额」项）
+**第 3 步：找到 Local Storage**
 
-来自 DeepSeek 接口 `GET https://api.deepseek.com/user/balance`。命令行自查：
+- 左侧展开 **Local Storage**（本地存储）→ 点开 `https://platform.deepseek.com` 这一项
+- 右侧会出现该网站存的所有键值对
+
+**第 4 步：复制 token**
+
+- 在键值列表里找名字带 token 的条目，常见的有：
+  `token`、`userToken`、`access_token`、`apiKey`、`ds_token` 等
+- 找到后，**双击 Value 那一列** → 全选 → 复制那个长字符串
+
+**第 5 步：判断你复制到的是什么（重要）**
+
+| 复制的值长什么样 | 是什么 | 能不能用 |
+|---|---|---|
+| 以 `sk-` 开头（约 35 位） | **API Key**（开放平台的密钥） | ✅ 直接可用 |
+| 形如 `eyJxxxxx.yyyyy.zzzzz`（两三个点分隔的长串） | **网页会话 JWT**（网站内部接口用的） | ⚠️ 不一定能直接查余额，见下方验证 |
+
+**第 6 步：验证这个 token 能不能查余额**
 
 ```bash
 curl -s https://api.deepseek.com/user/balance \
-  -H "Authorization: Bearer sk-你的key"
+  -H "Authorization: Bearer 你复制的token"
 ```
 
-返回字段说明：
+- 返回 `{"is_available":true,"balance_infos":[...]}` → **能用**，记下这个 token
+- 返回 401 / 认证失败 → 这个 token 查不了余额，改用下面的「兜底：API Keys 页面」方法
 
-| 字段 | 含义 |
-|---|---|
-| `is_available` | 账户是否可用 |
-| `balance_infos[].currency` | 币种（CNY / USD） |
-| `balance_infos[].total_balance` | **总余额**（卡片显示的数值） |
-| `balance_infos[].granted_balance` | 赠送余额（活动赠送部分） |
-| `balance_infos[].topped_up_balance` | 充值余额 |
-
-> 总余额 = 赠送余额 + 充值余额。卡片显示的就是 `total_balance`，按币种自适应显示 ¥ / $。
-
-#### Token 消费明细（卡片「今日 Tokens / 今日金额」）
-
-- **开放平台视角**：登录 platform.deepseek.com → 左侧 **「用量管理 / Usage」**，可按日/小时查看 **token 消耗明细**（输入/输出/缓存 token 分开统计）——这是官方的消费明细。
-- **卡片视角**：卡片上的「今日 Tokens / 今日金额」由 `dsh-host-billing` 按 DSH 配置的价目表**逐事件估算**（金额是估算值，卡片上有标注），用于侧边栏快速看一眼今天的消耗，不用每次去开放平台。
-- **峰谷时段**：DeepSeek 官方计费分峰谷（高峰：北京 09:00–12:00、14:00–18:00；其余谷时段半价）。卡片按官方窗口算出当前时段，谷时段显示绿色「谷 · 半价」徽标。
+> **兜底（最稳的方法）**：登录开放平台 → 左侧 **API Keys** → **创建 API Key** → 复制生成的 `sk-` 开头的密钥。这个一定能查余额，也是卡片最可靠的 token。
 
 ### 三、把这个 Token 喂给卡片
 
